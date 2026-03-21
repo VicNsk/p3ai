@@ -3,7 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
-import { Projects } from './pages/Projects';
+import { Projects } from './pages/Projects';  // ← Добавить импорт
 
 function App() {
   return (
@@ -16,7 +16,7 @@ function App() {
             path="/projects"
             element={
               <ProtectedRoute>
-                <Projects />
+                <Projects />  // ← Заменить заглушку на компонент
               </ProtectedRoute>
             }
           />
