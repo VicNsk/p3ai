@@ -1,3 +1,4 @@
+import { Draggable } from '@hello-pangea/dnd';
 import type { CardStatus, CardPriority } from '../types/card';
 
 interface CardItemProps {
@@ -7,6 +8,7 @@ interface CardItemProps {
   priority: CardPriority;
   status: CardStatus;
   due_date?: string;
+  index: number;
   onClick?: () => void;
 }
 
@@ -29,9 +31,11 @@ export function CardItem({
   priority,
   status,
   due_date,
+  index,
   onClick
 }: CardItemProps) {
-  return (
+
+  const content = (
     <div
       onClick={onClick}
       style={{
@@ -41,11 +45,18 @@ export function CardItem({
         border: '1px solid #e0e0e0',
         borderLeft: `4px solid ${priorityColors[priority]}`,
         borderRadius: '4px',
-        cursor: 'pointer',
-        transition: 'box-shadow 0.2s',
+        cursor: 'grab',
+        transition: 'box-shadow 0.2s, transform 0.2s',
+        userSelect: 'none'
       }}
-      onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)'}
-      onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+        e.currentTarget.style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = 'none';
+        e.currentTarget.style.transform = 'none';
+      }}
     >
       <div style={{ fontWeight: 600, marginBottom: '4px', fontSize: '14px' }}>
         {title}
@@ -87,5 +98,26 @@ export function CardItem({
         )}
       </div>
     </div>
+  );
+
+  return (
+    <Draggable draggableId={String(id)} index={index}>
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          style={{
+            ...provided.draggableProps.style,
+            opacity: snapshot.isDragging ? 0.8 : 1,
+            transform: snapshot.isDragging
+              ? provided.draggableProps.style?.transform + ' rotate(2deg)'
+              : provided.draggableProps.style?.transform,
+          }}
+        >
+          {content}
+        </div>
+      )}
+    </Draggable>
   );
 }

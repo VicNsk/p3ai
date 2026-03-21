@@ -1,3 +1,4 @@
+import { Droppable } from '@hello-pangea/dnd';
 import { CardItem } from './CardItem';
 import type { Card, CardStatus } from '../types/card';
 
@@ -57,79 +58,45 @@ export function BoardColumn({
         </h3>
       </div>
 
-      {/* Список карточек */}
-      <div style={{ flex: 1, overflowY: 'auto', minHeight: '200px' }}>
-        {cards.length === 0 ? (
-          <div style={{
-            textAlign: 'center',
-            color: '#999',
-            fontSize: '12px',
-            padding: '20px 0'
-          }}>
-            Нет задач
+      {/* Droppable зона для карточек */}
+      <Droppable droppableId={status}>
+        {(provided, snapshot) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            style={{
+              flex: 1,
+              overflowY: 'auto',
+              minHeight: '200px',
+              backgroundColor: snapshot.isDraggingOver ? '#e8f4fd' : 'transparent',
+              transition: 'background-color 0.2s',
+              borderRadius: '4px',
+              padding: '4px'
+            }}
+          >
+            {cards.length === 0 ? (
+              <div style={{
+                textAlign: 'center',
+                color: '#999',
+                fontSize: '12px',
+                padding: '20px 0'
+              }}>
+                Нет задач
+              </div>
+            ) : (
+              cards.map((card, index) => (
+                <CardItem
+                  key={card.id}
+                  {...card}
+                  index={index}
+                  onClick={() => onCardClick?.(card)}
+                />
+              ))
+            )}
+            {provided.placeholder}
           </div>
-        ) : (
-          cards.map((card) => (
-            <div key={card.id} style={{ position: 'relative' }}>
-              <CardItem
-                {...card}
-                onClick={() => onCardClick?.(card)}
-              />
-
-              {/* Кнопки быстрого перемещения */}
-              {onStatusChange && (
-                <div style={{
-                  position: 'absolute',
-                  right: '4px',
-                  top: '4px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '2px'
-                }}>
-                  {status !== 'new' && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMove(card.id, 'prev');
-                      }}
-                      style={{
-                        padding: '2px 6px',
-                        fontSize: '10px',
-                        backgroundColor: '#e0e0e0',
-                        border: 'none',
-                        borderRadius: '2px',
-                        cursor: 'pointer'
-                      }}
-                      title="Переместить назад"
-                    >
-                      ←
-                    </button>
-                  )}
-                  {status !== 'done' && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMove(card.id, 'next');
-                      }}
-                      style={{
-                        padding: '2px 6px',
-                        fontSize: '10px',
-                        backgroundColor: '#e0e0e0',
-                        border: 'none',
-                        borderRadius: '2px',
-                        cursor: 'pointer'
-                      }}
-                      title="Переместить вперёд"
-                    >
-                      →
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          ))
         )}
-      </div>
+      </Droppable>
     </div>
   );
 }
