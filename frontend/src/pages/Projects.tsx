@@ -172,10 +172,7 @@ export function Projects() {
               }}
               onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)'}
               onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
-              onClick={() => {
-                // Задел на будущее: переход к доске проекта
-                console.log('Open project:', project.id);
-              }}
+              onClick={() => navigate(`/projects/${project.id}/board`)}
             >
               <div style={{ fontWeight: 600, fontSize: '18px', marginBottom: '4px' }}>
                 {project.name}
