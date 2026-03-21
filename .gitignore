@@ -1,0 +1,28 @@
+# Виртуальное окружение
+.venv/
+venv/
+env/
+
+# Автогенерируемые файлы установки
+*.egg-info/
+
+# Секреты
+.env
+*.env.local
+*.env.*.local
+
+# Логи
+logs/
+*.log
+
+# SQLite база данных
+data/bot.db
+_obsidian_vault/
+
+# Артефакты
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+.pytest_cache
