@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { BoardColumn } from '../components/BoardColumn';
+import { CardModal } from '../components/CardModal';
 import type { Card, CardStatus } from '../types/card';
 
 export function Board() {
@@ -12,6 +13,11 @@ export function Board() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [newCardTitle, setNewCardTitle] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  // Состояние для модального окна
+  const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (projectId) {
@@ -24,6 +30,7 @@ export function Board() {
       setLoading(true);
       const response = await api.get(`/v1/cards/?project_id=${projectId}`);
       setCards(response.data);
+      setError('');
     } catch (err: any) {
       setError('Не удалось загрузить задачи');
       console.error('Fetch cards error:', err);
@@ -49,6 +56,9 @@ export function Board() {
     e.preventDefault();
     if (!newCardTitle.trim() || !projectId) return;
 
+    setSubmitting(true);
+    setError('');
+
     try {
       await api.post('/v1/cards/', {
         title: newCardTitle,
@@ -59,8 +69,30 @@ export function Board() {
       setNewCardTitle('');
       fetchCards();
     } catch (err: any) {
-      setError('Не удалось создать задачу');
+      setError(err.response?.data?.detail || 'Не удалось создать задачу');
+    } finally {
+      setSubmitting(false);
     }
+  };
+
+  const handleCardClick = (card: Card) => {
+    setSelectedCard(card);
+    setIsModalOpen(true);
+  };
+
+  const handleSaveCard = async (updatedCard: Card) => {
+    await api.patch(`/v1/cards/${updatedCard.id}`, {
+      title: updatedCard.title,
+      description: updatedCard.description,
+      priority: updatedCard.priority,
+      due_date: updatedCard.due_date,
+    });
+    fetchCards();
+  };
+
+  const handleDeleteCard = async (cardId: number) => {
+    await api.delete(`/v1/cards/${cardId}`);
+    fetchCards();
   };
 
   if (loading && cards.length === 0) {
@@ -79,7 +111,13 @@ export function Board() {
         <h1 style={{ margin: 0 }}>Доска проекта</h1>
         <button
           onClick={() => navigate('/projects')}
-          style={{ padding: '8px 16px', cursor: 'pointer' }}
+          style={{
+            padding: '8px 16px',
+            cursor: 'pointer',
+            backgroundColor: '#e0e0e0',
+            border: 'none',
+            borderRadius: '4px'
+          }}
         >
           ← Назад к проектам
         </button>
@@ -99,13 +137,27 @@ export function Board() {
           value={newCardTitle}
           onChange={(e) => setNewCardTitle(e.target.value)}
           placeholder="Название новой задачи..."
-          style={{ flex: 1, padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+          disabled={submitting}
+          style={{
+            flex: 1,
+            padding: '10px',
+            borderRadius: '4px',
+            border: '1px solid #ccc'
+          }}
         />
         <button
           type="submit"
-          style={{ padding: '10px 20px', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          disabled={submitting || !newCardTitle.trim()}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: submitting ? '#90a4ae' : '#4caf50',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: submitting ? 'not-allowed' : 'pointer'
+          }}
         >
-          Добавить
+          {submitting ? 'Добавление...' : 'Добавить'}
         </button>
       </form>
 
@@ -133,21 +185,36 @@ export function Board() {
           title="Новые"
           status="new"
           cards={cards.filter(c => c.status === 'new')}
+          onCardClick={handleCardClick}
           onStatusChange={handleStatusChange}
         />
         <BoardColumn
           title="В работе"
           status="process"
           cards={cards.filter(c => c.status === 'process')}
+          onCardClick={handleCardClick}
           onStatusChange={handleStatusChange}
         />
         <BoardColumn
           title="Готово"
           status="done"
           cards={cards.filter(c => c.status === 'done')}
+          onCardClick={handleCardClick}
           onStatusChange={handleStatusChange}
         />
       </div>
+
+      {/* Модальное окно редактирования */}
+      <CardModal
+        card={selectedCard}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedCard(null);
+        }}
+        onSave={handleSaveCard}
+        onDelete={handleDeleteCard}
+      />
     </div>
   );
 }

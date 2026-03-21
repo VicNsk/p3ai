@@ -88,7 +88,10 @@ export function BoardColumn({
                 }}>
                   {status !== 'new' && (
                     <button
-                      onClick={(e) => { e.stopPropagation(); handleMove(card.id, 'prev'); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMove(card.id, 'prev');
+                      }}
                       style={{
                         padding: '2px 6px',
                         fontSize: '10px',
@@ -97,13 +100,17 @@ export function BoardColumn({
                         borderRadius: '2px',
                         cursor: 'pointer'
                       }}
+                      title="Переместить назад"
                     >
                       ←
                     </button>
                   )}
                   {status !== 'done' && (
                     <button
-                      onClick={(e) => { e.stopPropagation(); handleMove(card.id, 'next'); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMove(card.id, 'next');
+                      }}
                       style={{
                         padding: '2px 6px',
                         fontSize: '10px',
@@ -112,6 +119,7 @@ export function BoardColumn({
                         borderRadius: '2px',
                         cursor: 'pointer'
                       }}
+                      title="Переместить вперёд"
                     >
                       →
                     </button>
