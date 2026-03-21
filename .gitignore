@@ -26,3 +26,6 @@ __pycache__/
 *.pyd
 .DS_Store
 .pytest_cache
+
+# прочее
+info.txt
