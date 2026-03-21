@@ -1,20 +1,29 @@
-import { useEffect, useState } from 'react';
-import { api } from './services/api';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { Login } from './pages/Login';
+import { Register } from './pages/Register';
+import { Projects } from './pages/Projects';
 
 function App() {
-  const [status, setStatus] = useState<string>('Loading...');
-
-  useEffect(() => {
-    api.get('/v1/health')
-      .then((res) => setStatus(res.data.status))
-      .catch((err) => setStatus('Error: ' + err.message));
-  }, []);
-
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      <h1>MicroP3 Frontend</h1>
-      <p>Backend Status: <strong>{status}</strong></p>
-    </div>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            path="/projects"
+            element={
+              <ProtectedRoute>
+                <Projects />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/" element={<Navigate to="/projects" />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 
