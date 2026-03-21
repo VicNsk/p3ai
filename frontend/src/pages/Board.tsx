@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { BoardColumn } from '../components/BoardColumn';
-import { Card, CardStatus } from '../types/card';
+import type { Card, CardStatus } from '../types/card';
 
 export function Board() {
   const { projectId } = useParams<{ projectId: string }>();

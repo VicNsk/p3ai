@@ -1,5 +1,5 @@
 import { CardItem } from './CardItem';
-import { Card, CardStatus } from '../types/card';
+import type { Card, CardStatus } from '../types/card';
 
 interface BoardColumnProps {
   title: string;
