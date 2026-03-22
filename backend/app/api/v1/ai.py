@@ -111,7 +111,7 @@ async def generate_content(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Сгенерировать контент через активный AI-провайдер."""
+    """Сгенерировать контент через активный AI-провайдер (прямой промт)."""
     provider = get_active_provider(db)
 
     try:
@@ -142,18 +142,68 @@ async def generate_content(
         )
 
 
-# === Пресеты для генерации контента ===
-# Все пресеты теперь принимают тело запроса (AIGenerateRequest) для консистентности
+@router.post("/generate/from-template", response_model=AIGenerateResponse)
+async def generate_from_template(
+    request: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Генерация контента с использованием шаблона промта из БД."""
+
+    template_type = request.get("template_type")
+    variables = request.get("variables", {})
+    custom_prompt = request.get("custom_prompt")
+    custom_system_prompt = request.get("custom_system_prompt")
+
+    if not template_type:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="template_type is required"
+        )
+
+    provider = get_active_provider(db)
+
+    try:
+        ai_service = AIService(
+            {
+                "provider_type": provider.provider_type.value,
+                "api_base_url": provider.api_base_url,
+                "api_key": provider.api_key,
+                "model_name": provider.model_name,
+                "max_tokens": provider.max_tokens,
+                "temperature": provider.temperature,
+            }
+        )
+
+        content = await ai_service.generate_with_template(
+            template_type=template_type,
+            variables=variables,
+            db=db,
+            custom_prompt=custom_prompt,
+            custom_system_prompt=custom_system_prompt,
+        )
+
+        return AIGenerateResponse(
+            content=content,
+            model=provider.model_name,
+            provider=provider.provider_type.value,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"AI generation failed: {str(e)}",
+        )
+
+
+# === Пресеты для генерации контента (обратная совместимость) ===
 
 
 @router.post("/generate/meta-card/why", response_model=AIGenerateResponse)
 async def generate_why(
-    request: AIGenerateRequest,  # ← Тело запроса, не query params!
+    request: AIGenerateRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Сгенерировать мета-карточку Why (Зачем этот проект)."""
-    # Если промпт не передан — используем дефолтный
     prompt = (
         request.prompt
         or "Создай обоснование проекта. Опиши проблему, выгоды, актуальность."
@@ -221,9 +271,7 @@ async def generate_requirements(
     )
 
 
-@router.post(
-    "/generate/meta-card/stakeholders", response_model=AIGenerateResponse
-)  # ← НОВЫЙ эндпоинт!
+@router.post("/generate/meta-card/stakeholders", response_model=AIGenerateResponse)
 async def generate_stakeholders(
     request: AIGenerateRequest,
     db: Session = Depends(get_db),
@@ -262,7 +310,7 @@ async def generate_stakeholders(
 
 @router.post("/generate/card/description", response_model=AIGenerateResponse)
 async def generate_card_description(
-    request: AIGenerateRequest,  # ← Тело запроса, не query params!
+    request: AIGenerateRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
