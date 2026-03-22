@@ -5,6 +5,7 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Projects } from './pages/Projects';
 import { Board } from './pages/Board';
+import { ProjectMetaCards } from './pages/ProjectMetaCards';
 
 function App() {
   return (
@@ -26,6 +27,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Board />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/projects/:projectId/meta"
+            element={
+              <ProtectedRoute>
+                <ProjectMetaCards />
               </ProtectedRoute>
             }
           />

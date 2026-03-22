@@ -7,6 +7,7 @@ import { BoardColumn } from '../components/BoardColumn';
 import { CardModal } from '../components/CardModal';
 import type { Card, CardStatus } from '../types/card';
 
+
 export function Board() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ export function Board() {
   const [newCardTitle, setNewCardTitle] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Состояние для модального окна
+  // Состояние для модального окна редактирования карточки
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -44,18 +45,20 @@ export function Board() {
   const handleStatusChange = async (cardId: number, newStatus: CardStatus) => {
     try {
       await api.patch(`/v1/cards/${cardId}`, { status: newStatus });
+      // Оптимистичное обновление локального состояния
       setCards(prev => prev.map(c =>
         c.id === cardId ? { ...c, status: newStatus } : c
       ));
     } catch (err: any) {
       setError('Не удалось обновить статус');
-      fetchCards();
+      fetchCards(); // Откат при ошибке
     }
   };
 
   const handleDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result;
 
+    // Если карточка брошена вне зоны или в ту же позицию — ничего не делаем
     if (!destination) return;
     if (
       destination.droppableId === source.droppableId &&
@@ -77,7 +80,7 @@ export function Board() {
       await api.patch(`/v1/cards/${cardId}`, { status: newStatus });
     } catch (err: any) {
       setError('Не удалось обновить статус');
-      fetchCards();
+      fetchCards(); // Откат при ошибке
     }
   };
 
@@ -131,29 +134,56 @@ export function Board() {
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
-        {/* Шапка */}
+
+        {/* Шапка с навигацией */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '24px'
+          marginBottom: '24px',
+          paddingBottom: '16px',
+          borderBottom: '1px solid #e0e0e0'
         }}>
-          <h1 style={{ margin: 0 }}>Доска проекта</h1>
-          <button
-            onClick={() => navigate('/projects')}
-            style={{
-              padding: '8px 16px',
-              cursor: 'pointer',
-              backgroundColor: '#e0e0e0',
-              border: 'none',
-              borderRadius: '4px'
-            }}
-          >
-            ← Назад к проектам
-          </button>
+          <h1 style={{ margin: 0, fontSize: '20px' }}>Доска проекта</h1>
+
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {/* Кнопка перехода к мета-карточкам */}
+            <button
+              onClick={() => navigate(`/projects/${projectId}/meta`)}
+              style={{
+                padding: '8px 16px',
+                cursor: 'pointer',
+                backgroundColor: '#2196f3',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                fontWeight: 500,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+              title="Перейти к мета-карточкам проекта"
+            >
+              📋 Мета-карточки
+            </button>
+
+            {/* Кнопка возврата к списку проектов */}
+            <button
+              onClick={() => navigate('/projects')}
+              style={{
+                padding: '8px 16px',
+                cursor: 'pointer',
+                backgroundColor: '#e0e0e0',
+                border: 'none',
+                borderRadius: '4px'
+              }}
+            >
+              ← Все проекты
+            </button>
+          </div>
         </div>
 
-        {/* Форма создания карточки */}
+        {/* Форма создания новой карточки */}
         <form onSubmit={handleCreateCard} style={{
           display: 'flex',
           gap: '12px',
@@ -172,7 +202,8 @@ export function Board() {
               flex: 1,
               padding: '10px',
               borderRadius: '4px',
-              border: '1px solid #ccc'
+              border: '1px solid #ccc',
+              fontSize: '14px'
             }}
           />
           <button
@@ -184,7 +215,8 @@ export function Board() {
               color: 'white',
               border: 'none',
               borderRadius: '4px',
-              cursor: submitting ? 'not-allowed' : 'pointer'
+              cursor: submitting ? 'not-allowed' : 'pointer',
+              fontWeight: 500
             }}
           >
             {submitting ? 'Добавление...' : 'Добавить'}
@@ -198,18 +230,20 @@ export function Board() {
             marginBottom: '16px',
             backgroundColor: '#ffebee',
             color: '#c62828',
-            borderRadius: '4px'
+            borderRadius: '4px',
+            fontSize: '14px'
           }}>
             {error}
           </div>
         )}
 
-        {/* Доска с колонками */}
+        {/* Доска с тремя колонками */}
         <div style={{
           display: 'flex',
           gap: '16px',
           overflowX: 'auto',
-          paddingBottom: '24px'
+          paddingBottom: '24px',
+          alignItems: 'flex-start'
         }}>
           <BoardColumn
             title="Новые"
@@ -234,7 +268,7 @@ export function Board() {
           />
         </div>
 
-        {/* Модальное окно редактирования */}
+        {/* Модальное окно редактирования карточки */}
         <CardModal
           card={selectedCard}
           isOpen={isModalOpen}
@@ -245,6 +279,7 @@ export function Board() {
           onSave={handleSaveCard}
           onDelete={handleDeleteCard}
         />
+
       </div>
     </DragDropContext>
   );
