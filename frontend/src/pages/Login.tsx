@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import qs from 'qs';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -18,9 +19,12 @@ export function Login() {
     setLoading(true);
 
     try {
-      const response = await api.post('/v1/auth/login', {
-        email,
-        password
+      const params = new URLSearchParams();
+      params.append('username', email);
+      params.append('password', password);
+
+      const response = await api.post('/v1/auth/login', params, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
 
       login(response.data.access_token);

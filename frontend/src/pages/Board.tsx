@@ -7,10 +7,12 @@ import { BoardColumn } from '../components/BoardColumn';
 import { CardModal } from '../components/CardModal';
 import { CycleSelector } from '../components/CycleSelector';
 import type { Card, CardStatus } from '../types/card';
+import { useAuth } from '../context/AuthContext';
 
 export function Board() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const { userId } = useAuth();
 
   const [cards, setCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(true);
@@ -305,6 +307,7 @@ export function Board() {
           }}
           onSave={handleSaveCard}
           onDelete={handleDeleteCard}
+          currentUserId={userId || 1}
         />
 
       </div>

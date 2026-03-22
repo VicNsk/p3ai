@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Card, CardPriority, CardStatus } from '../types/card';
+import { CommentsList } from './CommentsList';
+import { AttachmentsList } from './AttachmentsList';
 
 interface CardModalProps {
   card: Card | null;
@@ -7,15 +9,26 @@ interface CardModalProps {
   onClose: () => void;
   onSave: (card: Card) => Promise<void>;
   onDelete?: (cardId: number) => Promise<void>;
+  currentUserId: number;
 }
 
-export function CardModal({ card, isOpen, onClose, onSave, onDelete }: CardModalProps) {
+type TabType = 'details' | 'comments' | 'attachments';
+
+export function CardModal({
+  card,
+  isOpen,
+  onClose,
+  onSave,
+  onDelete,
+  currentUserId
+}: CardModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<CardPriority>('medium');
   const [dueDate, setDueDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState<TabType>('details');
 
   useEffect(() => {
     if (card) {
@@ -25,6 +38,7 @@ export function CardModal({ card, isOpen, onClose, onSave, onDelete }: CardModal
       setDueDate(card.due_date ? card.due_date.split('T')[0] : '');
     }
     setError('');
+    setActiveTab('details');
   }, [card]);
 
   if (!isOpen || !card) return null;
@@ -83,12 +97,14 @@ export function CardModal({ card, isOpen, onClose, onSave, onDelete }: CardModal
         backgroundColor: 'white',
         borderRadius: '8px',
         padding: '24px',
-        maxWidth: '500px',
+        maxWidth: '600px',
         width: '90%',
         maxHeight: '90vh',
         overflowY: 'auto'
       }}>
-        <h2 style={{ marginTop: 0, marginBottom: '20px' }}>Редактирование задачи</h2>
+        <h2 style={{ marginTop: 0, marginBottom: '20px', fontSize: '18px' }}>
+          Редактирование задачи
+        </h2>
 
         {error && (
           <div style={{
@@ -96,104 +112,181 @@ export function CardModal({ card, isOpen, onClose, onSave, onDelete }: CardModal
             marginBottom: '16px',
             backgroundColor: '#ffebee',
             color: '#c62828',
-            borderRadius: '4px'
+            borderRadius: '4px',
+            fontSize: '13px'
           }}>
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Заголовок *</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-              style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Описание</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={4}
-              style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box', resize: 'vertical' }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Приоритет</label>
-            <select
-              value={priority}
-              onChange={(e) => setPriority(e.target.value as CardPriority)}
-              style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+        {/* Вкладки */}
+        <div style={{ marginBottom: '16px', borderBottom: '1px solid #e0e0e0' }}>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            <button
+              onClick={() => setActiveTab('details')}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: activeTab === 'details' ? '#1976d2' : 'transparent',
+                color: activeTab === 'details' ? 'white' : '#333',
+                border: 'none',
+                borderBottom: activeTab === 'details' ? '2px solid #1976d2' : '2px solid transparent',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: activeTab === 'details' ? 500 : 400,
+                borderRadius: '4px 4px 0 0'
+              }}
             >
-              <option value="low">Низкий</option>
-              <option value="medium">Средний</option>
-              <option value="high">Высокий</option>
-            </select>
+              📝 Детали
+            </button>
+            <button
+              onClick={() => setActiveTab('comments')}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: activeTab === 'comments' ? '#1976d2' : 'transparent',
+                color: activeTab === 'comments' ? 'white' : '#333',
+                border: 'none',
+                borderBottom: activeTab === 'comments' ? '2px solid #1976d2' : '2px solid transparent',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: activeTab === 'comments' ? 500 : 400,
+                borderRadius: '4px 4px 0 0'
+              }}
+            >
+              💬 Комментарии
+            </button>
+            <button
+              onClick={() => setActiveTab('attachments')}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: activeTab === 'attachments' ? '#1976d2' : 'transparent',
+                color: activeTab === 'attachments' ? 'white' : '#333',
+                border: 'none',
+                borderBottom: activeTab === 'attachments' ? '2px solid #1976d2' : '2px solid transparent',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: activeTab === 'attachments' ? 500 : 400,
+                borderRadius: '4px 4px 0 0'
+              }}
+            >
+              📎 Файлы
+            </button>
           </div>
+        </div>
 
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Дедлайн</label>
-            <input
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
-            />
-          </div>
+        {/* Содержимое вкладок */}
+        {activeTab === 'details' && (
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px' }}>
+                Заголовок *
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+                style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box', fontSize: '14px' }}
+              />
+            </div>
 
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-            {onDelete && (
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px' }}>
+                Описание
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={4}
+                style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box', resize: 'vertical', fontSize: '14px' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px' }}>
+                Приоритет
+              </label>
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as CardPriority)}
+                style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', fontSize: '14px' }}
+              >
+                <option value="low">Низкий</option>
+                <option value="medium">Средний</option>
+                <option value="high">Высокий</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px' }}>
+                Дедлайн
+              </label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box', fontSize: '14px' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              {onDelete && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  style={{
+                    padding: '10px 20px',
+                    backgroundColor: '#f44336',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '13px'
+                  }}
+                >
+                  Удалить
+                </button>
+              )}
               <button
                 type="button"
-                onClick={handleDelete}
+                onClick={onClose}
+                disabled={loading}
                 style={{
                   padding: '10px 20px',
-                  backgroundColor: '#f44336',
+                  backgroundColor: '#e0e0e0',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '13px'
+                }}
+              >
+                Отмена
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: loading ? '#90a4ae' : '#1976d2',
                   color: 'white',
                   border: 'none',
                   borderRadius: '4px',
-                  cursor: 'pointer'
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  fontSize: '13px'
                 }}
               >
-                Удалить
+                {loading ? 'Сохранение...' : 'Сохранить'}
               </button>
-            )}
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#e0e0e0',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              Отмена
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: loading ? '#90a4ae' : '#1976d2',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: loading ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {loading ? 'Сохранение...' : 'Сохранить'}
-            </button>
-          </div>
-        </form>
+            </div>
+          </form>
+        )}
+
+        {activeTab === 'comments' && (
+          <CommentsList cardId={card.id} currentUserId={currentUserId} />
+        )}
+
+        {activeTab === 'attachments' && (
+          <AttachmentsList cardId={card.id} currentUserId={currentUserId} />
+        )}
       </div>
     </div>
   );
