@@ -15,3 +15,6 @@ class Project(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     cards = relationship("Card", back_populates="project", cascade="all, delete-orphan")
+    meta_cards = relationship(
+        "MetaCard", back_populates="project", cascade="all, delete-orphan"
+    )
