@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
-import { MetaCardEditor } from '../components/MetaCardEditor';
 import type { MetaCardType } from '../components/MetaCardEditor';
+import { MetaCardEditor } from '../components/MetaCardEditor';
 import { AIGenerateButton } from '../components/AIGenerateButton';
 import { getErrorMessage } from '../utils/errorHandler';
 
@@ -182,7 +182,7 @@ export function ProjectMetaCards() {
         color: '#1565c0'
       }}>
         <strong>💡 Подсказка:</strong> Мета-карточки помогают сфокусироваться на сути проекта.
-        Используйте 🪄 для автоматической генерации контента с помощью ИИ.
+        Используйте 🪄 для автоматической генерации контента с помощью ИИ. Промты настраиваются в разделе «Шаблоны».
       </div>
 
       {/* Редакторы мета-карточек с кнопками генерации */}
@@ -199,9 +199,13 @@ export function ProjectMetaCards() {
               {metaCardConfig[type].title}
             </h3>
             <AIGenerateButton
-              prompt={getMetaCardPrompt(type, project?.name)}
-              systemPrompt={getMetaCardSystemPrompt(type)}
-              endpoint={`/v1/ai/generate/meta-card/${type}`}
+              // === НОВЫЙ РЕЖИМ: Использование шаблона из БД ===
+              templateType={`prompt_meta_${type}`}  // например: "prompt_meta_why"
+              variables={{
+                project_name: project?.name || '',
+                project_description: project?.description || ''
+              }}
+              endpoint="/v1/ai/generate/from-template"
               onGenerated={(content) => handleContentGenerated(type, content)}
               variant="icon"
               disabled={loading}
@@ -231,34 +235,4 @@ export function ProjectMetaCards() {
       ))}
     </div>
   );
-}
-
-// === Вспомогательные функции для генерации промптов ===
-
-function getMetaCardPrompt(type: MetaCardType, projectName?: string): string {
-  const name = projectName || 'текущий проект';
-
-  switch (type) {
-    case 'why':
-      return `Создай обоснование проекта "${name}". Опиши: 1) Какую проблему решает проект, 2) Какие выгоды принесёт, 3) Почему это важно сделать сейчас. Формат: краткий текст на 150-200 слов.`;
-    case 'requirements':
-      return `Создай требования к проекту "${name}". Опиши: 1) Функциональные требования (что система должна делать), 2) Нефункциональные требования (производительность, безопасность), 3) Критерии успеха проекта. Формат: структурированный список.`;
-    case 'stakeholders':
-      return `Опиши заинтересованные лица проекта "${name}". Кто влияет на проект и кто зависит от результата? Их роли, интересы и ожидания. Формат: список с кратким описанием каждого стейкхолдера.`;
-    default:
-      return `Создай контент для раздела проекта "${name}".`;
-  }
-}
-
-function getMetaCardSystemPrompt(type: MetaCardType): string {
-  switch (type) {
-    case 'why':
-      return 'Ты опытный продукт-менеджер. Помогай формулировать цели проектов ясно и убедительно. Отвечай структурированно, по-русски, без излишней воды.';
-    case 'requirements':
-      return 'Ты старший системный аналитик. Составляй полные и точные требования. Отвечай структурированно, по-русски, с чёткими формулировками.';
-    case 'stakeholders':
-      return 'Ты опытный бизнес-аналитик. Выявляй всех стейкхолдеров и их потребности. Отвечай структурированно, по-русски, с акцентом на практическую пользу.';
-    default:
-      return 'Ты полезный ассистент. Отвечай структурированно, по-русски.';
-  }
 }

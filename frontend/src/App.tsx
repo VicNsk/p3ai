@@ -10,6 +10,7 @@ import { ProjectHistory } from './pages/ProjectHistory';
 import { AISettings } from './pages/AISettings';
 import { useAuth } from './context/AuthContext';
 import { useEffect } from 'react';
+import { TemplateSettings } from './pages/TemplateSettings';
 
 function App() {
   const { isAuthenticated, token, userId } = useAuth();
@@ -65,6 +66,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AISettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/templates"
+            element={
+              <ProtectedRoute>
+                <TemplateSettings />
               </ProtectedRoute>
             }
           />

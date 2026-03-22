@@ -143,6 +143,21 @@ export function AISettings() {
         >
           ← Назад к проектам
         </button>
+        // В шапке AISettings:
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={() => navigate('/settings/ai')}
+            style={{ padding: '8px 16px', backgroundColor: '#9c27b0', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            ⚙️ ИИ-провайдеры
+          </button>
+          <button
+            onClick={() => navigate('/settings/templates')}
+            style={{ padding: '8px 16px', backgroundColor: '#607d8b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            📄 Шаблоны
+          </button>
+        </div>
       </div>
 
       {/* Сообщения */}

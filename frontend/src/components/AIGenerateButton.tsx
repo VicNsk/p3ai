@@ -3,8 +3,18 @@ import { api } from '../services/api';
 import { getErrorMessage } from '../utils/errorHandler';
 
 interface AIGenerateButtonProps {
-  prompt: string;
+  // Прямой промт (старый режим)
+  prompt?: string;
   systemPrompt?: string;
+
+  // Шаблон из БД (новый режим)
+  templateType?: string;  // например: "prompt_meta_why"
+  variables?: Record<string, any>;  // переменные для подстановки: { project_name: "..." }
+
+  // Кастомные переопределения (работают с templateType)
+  customPrompt?: string;
+  customSystemPrompt?: string;
+
   endpoint?: string;
   onGenerated: (content: string) => void;
   disabled?: boolean;
@@ -15,6 +25,10 @@ interface AIGenerateButtonProps {
 export function AIGenerateButton({
   prompt,
   systemPrompt,
+  templateType,
+  variables = {},
+  customPrompt,
+  customSystemPrompt,
   endpoint = '/v1/ai/generate',
   onGenerated,
   disabled = false,
@@ -29,20 +43,31 @@ export function AIGenerateButton({
     setError('');
 
     try {
-      // Формируем тело запроса с правильными именами полей (snake_case)
-      const requestBody: Record<string, any> = {
-        prompt  // ← Обязательно
-      };
+      let requestBody: Record<string, any> = {};
 
-      // Добавляем system_prompt только если он есть (snake_case!)
-      if (systemPrompt) {
-        requestBody.system_prompt = systemPrompt;
-      }
+      if (templateType) {
+        // === НОВЫЙ РЕЖИМ: Использование шаблона из БД ===
+        requestBody = {
+          template_type: templateType,
+          variables: variables
+        };
 
-      // Опциональные параметры
-      if (variant === 'button') {  // Пример условной логики
-        // requestBody.max_tokens = 2048;
-        // requestBody.temperature = 7;
+        // Кастомные переопределения (опционально)
+        if (customPrompt) {
+          requestBody.custom_prompt = customPrompt;
+        }
+        if (customSystemPrompt) {
+          requestBody.custom_system_prompt = customSystemPrompt;
+        }
+
+        // Используем специальный эндпоинт для шаблонов
+        endpoint = '/v1/ai/generate/from-template';
+      } else {
+        // === СТАРЫЙ РЕЖИМ: Прямой промт ===
+        requestBody = {
+          prompt: prompt || '',
+          system_prompt: systemPrompt
+        };
       }
 
       const response = await api.post(endpoint, requestBody);
