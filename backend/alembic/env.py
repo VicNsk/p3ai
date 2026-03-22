@@ -8,7 +8,16 @@ from sqlalchemy import engine_from_config, pool
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.database import Base
-from app.models import user, project, card, meta_card, cycle, audit_log
+from app.models import (
+    attachment,
+    audit_log,
+    card,
+    comment,
+    cycle,
+    meta_card,
+    project,
+    user,
+)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

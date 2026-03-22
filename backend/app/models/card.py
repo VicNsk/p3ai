@@ -50,3 +50,9 @@ class Card(Base):
     )
     cycle_id = Column(Integer, ForeignKey("cycles.id"), nullable=True)
     cycle = relationship("Cycle", back_populates="cards")
+    comments = relationship(
+        "Comment", back_populates="card", cascade="all, delete-orphan"
+    )
+    attachments = relationship(
+        "Attachment", back_populates="card", cascade="all, delete-orphan"
+    )

@@ -16,3 +16,5 @@ class User(Base):
         "Card", back_populates="assignee", foreign_keys="Card.assignee_id"
     )
     audit_logs = relationship("AuditLog", back_populates="user")
+    comments = relationship("Comment", back_populates="user")
+    attachments = relationship("Attachment", back_populates="user")

@@ -5,6 +5,8 @@ from .card import Card
 from .meta_card import MetaCard, MetaCardType
 from .cycle import Cycle
 from .audit_log import AuditLog, AuditAction
+from .comment import Comment
+from .attachment import Attachment
 
 # Экспорт для удобного импорта в других модулях
 __all__ = [
@@ -16,4 +18,6 @@ __all__ = [
     "Cycle",
     "AuditLog",
     "AuditAction",
+    "Comment",
+    "Attachment",
 ]
