@@ -14,6 +14,7 @@ from app.api.v1.health import router as health_router
 from app.api.v1.meta_cards import router as meta_cards_router
 from app.api.v1.projects import router as projects_router
 from app.core.config import settings
+from app.api.v1.templates import router as templates_router
 
 BaseModel.model_config = {"protected_namespaces": ()}
 app = FastAPI(title=settings.APP_NAME)
@@ -42,6 +43,7 @@ app.include_router(
     attachments_router, prefix="/api/v1/attachments", tags=["Attachments"]
 )
 app.include_router(ai_router, prefix="/api/v1/ai", tags=["AI"])
+app.include_router(templates_router, prefix="/api/v1/templates", tags=["Templates"])
 
 
 @app.get("/")

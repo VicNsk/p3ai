@@ -19,6 +19,7 @@ from app.models import (
     project,
     user,
     ai_provider,
+    template,
 )
 
 # this is the Alembic Config object, which provides
