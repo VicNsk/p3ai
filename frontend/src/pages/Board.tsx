@@ -203,6 +203,12 @@ export function Board() {
             >
               ← Все проекты
             </button>
+            <button
+              onClick={() => navigate('/settings/ai')}
+              style={{ padding: '8px 16px', cursor: 'pointer', backgroundColor: '#9c27b0', color: 'white', border: 'none', borderRadius: '4px' }}
+            >
+              ⚙️ ИИ
+            </button>
           </div>
         </div>
 

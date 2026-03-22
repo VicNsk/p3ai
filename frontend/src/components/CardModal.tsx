@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { Card, CardPriority, CardStatus } from '../types/card';
 import { CommentsList } from './CommentsList';
 import { AttachmentsList } from './AttachmentsList';
+import { AIGenerateButton } from './AIGenerateButton';
 
 interface CardModalProps {
   card: Card | null;
@@ -29,6 +30,7 @@ export function CardModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<TabType>('details');
+  const [generatingDescription, setGeneratingDescription] = useState(false);
 
   useEffect(() => {
     if (card) {
@@ -39,6 +41,7 @@ export function CardModal({
     }
     setError('');
     setActiveTab('details');
+    setGeneratingDescription(false);
   }, [card]);
 
   if (!isOpen || !card) return null;
@@ -78,6 +81,11 @@ export function CardModal({
         setError('Не удалось удалить');
       }
     }
+  };
+
+  const handleDescriptionGenerated = (content: string) => {
+    setDescription(content);
+    setGeneratingDescription(false);
   };
 
   return (
@@ -176,6 +184,7 @@ export function CardModal({
         {/* Содержимое вкладок */}
         {activeTab === 'details' && (
           <form onSubmit={handleSubmit}>
+            {/* Заголовок */}
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px' }}>
                 Заголовок *
@@ -189,18 +198,31 @@ export function CardModal({
               />
             </div>
 
+            {/* Описание с кнопкой генерации */}
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px' }}>
-                Описание
-              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <label style={{ fontWeight: 500, fontSize: '13px' }}>
+                  Описание
+                </label>
+                <AIGenerateButton
+                  prompt={`Создай подробное описание для задачи: "${title}". Включи цель задачи, шаги для выполнения и критерии готовности (Definition of Done).`}
+                  systemPrompt="Ты опытный тимлид. Помогай формулировать задачи чётко и выполнимо. Отвечай структурированно, по-русски."
+                  endpoint="/v1/ai/generate/card/description"
+                  onGenerated={handleDescriptionGenerated}
+                  variant="icon"
+                  disabled={loading}
+                />
+              </div>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                rows={4}
+                rows={5}
+                placeholder="Описание задачи... Используйте 🪄 для авто-генерации"
                 style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box', resize: 'vertical', fontSize: '14px' }}
               />
             </div>
 
+            {/* Приоритет */}
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px' }}>
                 Приоритет
@@ -216,6 +238,7 @@ export function CardModal({
               </select>
             </div>
 
+            {/* Дедлайн */}
             <div style={{ marginBottom: '24px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px' }}>
                 Дедлайн
@@ -228,6 +251,7 @@ export function CardModal({
               />
             </div>
 
+            {/* Кнопки действий */}
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               {onDelete && (
                 <button

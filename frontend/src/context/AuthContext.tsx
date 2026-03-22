@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { api } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   id: number;
@@ -12,71 +13,82 @@ interface AuthContextType {
   token: string | null;
   user: User | null;
   userId: number | null;
-  login: (token: string) => void;
+  login: (token: string, user?: User) => void;
   logout: () => void;
   isAuthenticated: boolean;
   isLoading: boolean;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [token, setToken] = useState<string | null>(() => {
+    // Инициализация из localStorage при старте
+    return localStorage.getItem('token');
+  });
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
-  // Извлечение userId из токена или API
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!token) {
-        setUser(null);
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        // Попытка получить данные пользователя через API
-        const response = await api.get('/v1/auth/me', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setUser(response.data);
-      } catch (err: any) {
-        // Если API недоступно, пробуем декодировать JWT
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          setUser({
-            id: payload.sub || payload.user_id,
-            email: payload.email || 'user@example.com',
-            is_active: true
-          });
-        } catch {
-          setUser(null);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, [token]);
-
+  // Загрузка данных пользователя при наличии токена
   useEffect(() => {
     if (token) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      refreshUser();
     } else {
-      delete api.defaults.headers.common['Authorization'];
+      setIsLoading(false);
     }
   }, [token]);
 
-  const login = (newToken: string) => {
+  const refreshUser = async () => {
+    try {
+      const response = await api.get('/v1/auth/me');
+      setUser(response.data);
+    } catch (err: any) {
+      // Токен невалиден — выходим
+      console.warn('Token invalid, logging out');
+      logout();
+      return;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const login = (newToken: string, userData?: User) => {
+    // 1. Сохраняем токен в localStorage
     localStorage.setItem('token', newToken);
+
+    // 2. Обновляем состояние
     setToken(newToken);
+
+    // 3. Если данные пользователя переданы — сохраняем сразу
+    if (userData) {
+      setUser(userData);
+    }
+
+    // 4. Немедленно обновляем заголовок axios (гарантия для текущих запросов)
+    api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+
+    console.log('✓ Auth: login successful, token saved');
   };
 
   const logout = () => {
+    // 1. Очищаем localStorage
     localStorage.removeItem('token');
+
+    // 2. Сбрасываем состояние
     setToken(null);
     setUser(null);
+
+    // 3. Удаляем заголовок из axios
+    delete api.defaults.headers.common['Authorization'];
+
+    // 4. Перенаправляем на логин
+    if (navigate) {
+      navigate('/login');
+    }
+
+    console.log('✓ Auth: logout complete');
   };
 
   return (
@@ -88,7 +100,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         isAuthenticated: !!token,
-        isLoading
+        isLoading,
+        refreshUser
       }}
     >
       {children}

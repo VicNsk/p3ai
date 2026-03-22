@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Login } from './pages/Login';
@@ -7,11 +7,24 @@ import { Projects } from './pages/Projects';
 import { Board } from './pages/Board';
 import { ProjectMetaCards } from './pages/ProjectMetaCards';
 import { ProjectHistory } from './pages/ProjectHistory';
+import { AISettings } from './pages/AISettings';
+import { useAuth } from './context/AuthContext';
+import { useEffect } from 'react';
 
 function App() {
+  const { isAuthenticated, token, userId } = useAuth();
+  // Отладка: логировать состояние авторизации
+  useEffect(() => {
+    console.log('🔐 App: auth state changed', {
+      isAuthenticated,
+      tokenPreview: token ? `${token.slice(0, 20)}...` : null,
+      userId
+    });
+  }, [isAuthenticated, token, userId]);
+
   return (
     <AuthProvider>
-      <BrowserRouter>
+
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -47,9 +60,17 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/settings/ai"
+            element={
+              <ProtectedRoute>
+                <AISettings />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/" element={<Navigate to="/projects" />} />
         </Routes>
-      </BrowserRouter>
+
     </AuthProvider>
   );
 }

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import qs from 'qs';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -19,18 +18,33 @@ export function Login() {
     setLoading(true);
 
     try {
+      // OAuth2 требует 'username' и form-urlencoded
       const params = new URLSearchParams();
-      params.append('username', email);
+      params.append('username', email);  // ← Важно: username, не email!
       params.append('password', password);
 
       const response = await api.post('/v1/auth/login', params, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
 
-      login(response.data.access_token);
+      // ✅ Критично: извлечь токен и данные пользователя из ответа
+      const { access_token, user_id, email: userEmail } = response.data;
+
+      // Вызываем login() с токеном и данными пользователя
+      login(access_token, {
+        id: user_id,
+        email: userEmail,
+        is_active: true
+      });
+
+      // Переход на главную
       navigate('/projects');
+
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Не удалось войти. Проверьте данные.');
+      const detail = err.response?.data?.detail;
+      const msg = Array.isArray(detail) ? detail.map((e: any) => e.msg).join('; ') : detail;
+      setError(msg || 'Не удалось войти');
+      console.error('Login error:', err);
     } finally {
       setLoading(false);
     }

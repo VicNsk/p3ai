@@ -1,18 +1,21 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
+from app.api.v1.ai import router as ai_router
+from app.api.v1.attachments import router as attachments_router
+from app.api.v1.audit import router as audit_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.cards import router as cards_router
+from app.api.v1.comments import router as comments_router
+from app.api.v1.cycles import router as cycles_router
 from app.api.v1.health import router as health_router
 from app.api.v1.meta_cards import router as meta_cards_router
 from app.api.v1.projects import router as projects_router
 from app.core.config import settings
-from app.api.v1.cycles import router as cycles_router
-from app.api.v1.audit import router as audit_router
-from app.api.v1.comments import router as comments_router
-from app.api.v1.attachments import router as attachments_router
 
+BaseModel.model_config = {"protected_namespaces": ()}
 app = FastAPI(title=settings.APP_NAME)
 
 from fastapi import Request
@@ -38,6 +41,7 @@ app.include_router(comments_router, prefix="/api/v1/comments", tags=["Comments"]
 app.include_router(
     attachments_router, prefix="/api/v1/attachments", tags=["Attachments"]
 )
+app.include_router(ai_router, prefix="/api/v1/ai", tags=["AI"])
 
 
 @app.get("/")

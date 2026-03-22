@@ -7,6 +7,7 @@ from .cycle import Cycle
 from .audit_log import AuditLog, AuditAction
 from .comment import Comment
 from .attachment import Attachment
+from .ai_provider import AIProvider, ProviderType
 
 # Экспорт для удобного импорта в других модулях
 __all__ = [
@@ -20,4 +21,6 @@ __all__ = [
     "AuditAction",
     "Comment",
     "Attachment",
+    "AIProvider",
+    "ProviderType",
 ]

@@ -9,6 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.database import Base
 from app.models import (
+    ai_provider,
     attachment,
     audit_log,
     card,
@@ -17,6 +18,7 @@ from app.models import (
     meta_card,
     project,
     user,
+    ai_provider,
 )
 
 # this is the Alembic Config object, which provides
