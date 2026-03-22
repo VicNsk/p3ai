@@ -15,3 +15,4 @@ class User(Base):
     assigned_cards = relationship(
         "Card", back_populates="assignee", foreign_keys="Card.assignee_id"
     )
+    audit_logs = relationship("AuditLog", back_populates="user")

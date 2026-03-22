@@ -48,3 +48,5 @@ class Card(Base):
     assignee = relationship(
         "User", back_populates="assigned_cards", foreign_keys=[assignee_id]
     )
+    cycle_id = Column(Integer, ForeignKey("cycles.id"), nullable=True)
+    cycle = relationship("Cycle", back_populates="cards")

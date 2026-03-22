@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import type { DropResult } from '@hello-pangea/dnd';
 import { DragDropContext } from '@hello-pangea/dnd';
+import type { DropResult } from '@hello-pangea/dnd';
 import { api } from '../services/api';
 import { BoardColumn } from '../components/BoardColumn';
 import { CardModal } from '../components/CardModal';
+import { CycleSelector } from '../components/CycleSelector';
 import type { Card, CardStatus } from '../types/card';
-
 
 export function Board() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -22,17 +22,27 @@ export function Board() {
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Состояние для фильтрации по циклу
+  const [selectedCycleId, setSelectedCycleId] = useState<number | null>(null);
+
   useEffect(() => {
     if (projectId) {
       fetchCards();
     }
-  }, [projectId]);
+  }, [projectId, selectedCycleId]);
 
   const fetchCards = async () => {
     try {
       setLoading(true);
       const response = await api.get(`/v1/cards/?project_id=${projectId}`);
-      setCards(response.data);
+      let fetchedCards = response.data;
+
+      // Фильтрация по циклу (если выбран)
+      if (selectedCycleId) {
+        fetchedCards = fetchedCards.filter((c: Card) => c.cycle_id === selectedCycleId);
+      }
+
+      setCards(fetchedCards);
       setError('');
     } catch (err: any) {
       setError('Не удалось загрузить задачи');
@@ -96,7 +106,8 @@ export function Board() {
         title: newCardTitle,
         project_id: parseInt(projectId),
         priority: 'medium',
-        status: 'new'
+        status: 'new',
+        cycle_id: selectedCycleId || undefined
       });
       setNewCardTitle('');
       fetchCards();
@@ -140,14 +151,27 @@ export function Board() {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '24px',
+          marginBottom: '16px',
           paddingBottom: '16px',
           borderBottom: '1px solid #e0e0e0'
         }}>
           <h1 style={{ margin: 0, fontSize: '20px' }}>Доска проекта</h1>
 
           <div style={{ display: 'flex', gap: '8px' }}>
-            {/* Кнопка перехода к мета-карточкам */}
+            <button
+              onClick={() => navigate(`/projects/${projectId}/history`)}
+              style={{
+                padding: '8px 16px',
+                cursor: 'pointer',
+                backgroundColor: '#e0e0e0',
+                border: 'none',
+                borderRadius: '4px',
+                fontSize: '13px'
+              }}
+            >
+              📜 История
+            </button>
+
             <button
               onClick={() => navigate(`/projects/${projectId}/meta`)}
               style={{
@@ -158,16 +182,12 @@ export function Board() {
                 border: 'none',
                 borderRadius: '4px',
                 fontWeight: 500,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
+                fontSize: '13px'
               }}
-              title="Перейти к мета-карточкам проекта"
             >
               📋 Мета-карточки
             </button>
 
-            {/* Кнопка возврата к списку проектов */}
             <button
               onClick={() => navigate('/projects')}
               style={{
@@ -175,13 +195,20 @@ export function Board() {
                 cursor: 'pointer',
                 backgroundColor: '#e0e0e0',
                 border: 'none',
-                borderRadius: '4px'
+                borderRadius: '4px',
+                fontSize: '13px'
               }}
             >
               ← Все проекты
             </button>
           </div>
         </div>
+
+        {/* Переключатель циклов */}
+        <CycleSelector
+          projectId={parseInt(projectId || '0')}
+          onCycleChange={setSelectedCycleId}
+        />
 
         {/* Форма создания новой карточки */}
         <form onSubmit={handleCreateCard} style={{

@@ -18,3 +18,9 @@ class Project(Base):
     meta_cards = relationship(
         "MetaCard", back_populates="project", cascade="all, delete-orphan"
     )
+    cycles = relationship(
+        "Cycle", back_populates="project", cascade="all, delete-orphan"
+    )
+    audit_logs = relationship(
+        "AuditLog", back_populates="project", cascade="all, delete-orphan"
+    )

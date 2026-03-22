@@ -6,6 +6,7 @@ import { Register } from './pages/Register';
 import { Projects } from './pages/Projects';
 import { Board } from './pages/Board';
 import { ProjectMetaCards } from './pages/ProjectMetaCards';
+import { ProjectHistory } from './pages/ProjectHistory';
 
 function App() {
   return (
@@ -35,6 +36,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ProjectMetaCards />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/projects/:projectId/history"
+            element={
+              <ProtectedRoute>
+                <ProjectHistory />
               </ProtectedRoute>
             }
           />
